@@ -6,24 +6,16 @@ You can find details in the paper [Scaling Speech Technology to 1000+ languages]
 
 An overview of the languages covered by MMS can be found [here](https://dl.fbaipublicfiles.com/mms/misc/language_coverage_mms.html).
 
-
-## Pretrained models
-
-| Model | Link
-|---|---
-MMS-300M | [download](https://dl.fbaipublicfiles.com/mms/pretraining/base_300m.pt)
-MMS-1B | [download](https://dl.fbaipublicfiles.com/mms/pretraining/base_1b.pt)
-
-Example commands to finetune the pretrained models can be found [here](https://github.com/facebookresearch/fairseq/tree/main/examples/wav2vec#fine-tune-a-pre-trained-model-with-ctc).
-
 ## Finetuned models
 ### ASR
 
-| Model | Languages | Dataset | Model | Supported languages |
-|---|---|---|---|---
-MMS-1B:FL102 | 102 | FLEURS | [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_fl102.pt) | [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_fl102_langs.html) 
-MMS-1B:L1107| 1107 | MMS-lab | [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_l1107.pt) | [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_l1107_langs.html) 
-MMS-1B-all| 1162 | MMS-lab + FLEURS <br>+ CV + VP + MLS |  [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_all.pt) | [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_all_langs.html)
+| Model | Languages | Dataset | Model | Dictionary* | Supported languages |
+|---|---|---|---|---|---
+MMS-1B:FL102 | 102 | FLEURS | [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_fl102.pt) | [download](https://dl.fbaipublicfiles.com/mms/asr/dict/mms1b_fl102/eng.txt) | [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_fl102_langs.html) 
+MMS-1B:L1107| 1107 | MMS-lab | [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_l1107.pt) | [download](https://dl.fbaipublicfiles.com/mms/asr/dict/mms1b_l1107/eng.txt)  | [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_l1107_langs.html) 
+MMS-1B-all| 1162 | MMS-lab + FLEURS <br>+ CV + VP + MLS |  [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_all.pt) | [download](https://dl.fbaipublicfiles.com/mms/asr/dict/mms1b_all/eng.txt) | [download](https://dl.fbaipublicfiles.com/mms/asr/mms1b_all_langs.html)
+
+\* In the `Dictionary` column, we provide the download link for token dictionary in English language. To download token dictionary for a different language supported by the model, modify the language code in the URL appropriately. For example, to get token dictionary of FL102 model for Hindi language, use [this](https://dl.fbaipublicfiles.com/mms/asr/dict/mms1b_fl102/hin.txt) link. 
 
 ### TTS
 1. Download the list of [iso codes](https://dl.fbaipublicfiles.com/mms/tts/all-tts-languages.html) of 1107 languages.
@@ -33,6 +25,12 @@ MMS-1B-all| 1162 | MMS-lab + FLEURS <br>+ CV + VP + MLS |  [download](https://dl
 wget https://dl.fbaipublicfiles.com/mms/tts/eng.tar.gz # English (eng)
 wget https://dl.fbaipublicfiles.com/mms/tts/azj-script_latin.tar.gz # North Azerbaijani (azj-script_latin)
 ```
+The above command downloads generator only, which is enough to run TTS inference. If you want the full model checkpoint which also includes the discriminator (`D_100000.pth`) and the optimizer states, download as follows.
+```
+# Example (full checkpoint: generator + discriminator + optimizer):
+wget https://dl.fbaipublicfiles.com/mms/tts/full_model/eng.tar.gz # English (eng)
+```
+
 
 ### LID
 
@@ -51,8 +49,11 @@ wget https://dl.fbaipublicfiles.com/mms/tts/azj-script_latin.tar.gz # North Azer
 Run this command to transcribe one or more audio files:
 ```shell command
 cd /path/to/fairseq-py/
-python examples/mms/asr/infer/mms_infer.py --model "/path/to/asr/model" --lang lang_code --audio "/path/to/audio_1.wav" "/path/to/audio_1.wav"
+python examples/mms/asr/infer/mms_infer.py --model "/path/to/asr/model" --lang lang_code \
+  --audio "/path/to/audio_1.wav" "/path/to/audio_2.wav" "/path/to/audio_3.wav"
 ```
+We also provide an Ipython notebook example inside `asr/tutorial` folder [ipynb](https://github.com/facebookresearch/fairseq/blob/main/examples/mms/asr/tutorial/MMS_ASR_Inference_Colab.ipynb) or [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/fairseq/blob/main/examples/mms/asr/tutorial/MMS_ASR_Inference_Colab.ipynb) 
+
 
 For more advance configuration and calculate CER/WER, you could prepare manifest folder by creating a folder with this format: 
 ```
@@ -129,17 +130,19 @@ $ PYTHONPATH=$PYTHONPATH:/path/to/vits python examples/mms/tts/infer.py --model-
 ```
 `example.wav` contains synthesized audio for the language.
 
+We also provide an Ipython notebook example inside `tts/tutorial` folder [ipynb](https://github.com/facebookresearch/fairseq/blob/main/examples/mms/tts/tutorial/MMS_TTS_Inference_Colab.ipynb) or [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/fairseq/blob/main/examples/mms/tts/tutorial/MMS_TTS_Inference_Colab.ipynb)
+
 
 ### LID
 
 
-Prepare two files in this format 
+Prepare two files in this format. Each manifest line contains <audio> and <number_of_sample>
 ```
 #/path/to/manifest.tsv
 /
-/path/to/audio1.wav
-/path/to/audio2.wav
-/path/to/audio3.wav
+/path/to/audio1.wav	180000
+/path/to/audio2.wav	240000
+/path/to/audio3.wav	160000
 
 # /path/to/manifest.lang
 eng 1
@@ -155,6 +158,17 @@ $  PYTHONPATH='.'  python3  examples/mms/lid/infer.py /path/to/dict/l126/ --path
 ```
 The above command assumes there is a file named `dict.lang.txt` in `/path/to/dict/l126/`. `<OUTDIR>/predictions.txt` will contain the predictions from the model for the audio files in `manifest.tsv`. 
 
+We also provide an Ipython notebook example inside `lid/tutorial` folder [ipynb](https://github.com/facebookresearch/fairseq/blob/main/examples/mms/lid/tutorial/MMS_LID_Inference_Colab.ipynb) or [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/facebookresearch/fairseq/blob/main/examples/mms/lid/tutorial/MMS_LID_Inference_Colab.ipynb) 
+  
+  
+## Pretrained models
+
+| Model | Link
+|---|---
+MMS-300M | [download](https://dl.fbaipublicfiles.com/mms/pretraining/base_300m.pt)
+MMS-1B | [download](https://dl.fbaipublicfiles.com/mms/pretraining/base_1b.pt)
+
+Example commands to finetune the pretrained models can be found [here](https://github.com/facebookresearch/fairseq/tree/main/examples/wav2vec#fine-tune-a-pre-trained-model-with-ctc).
 
 ## Forced Alignment Tooling
 

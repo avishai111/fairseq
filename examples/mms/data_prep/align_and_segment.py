@@ -51,12 +51,12 @@ def generate_emissions(model, audio_file):
             offset = time_to_frame(input_start_time)
 
             emissions_ = emissions_[
-                :, emission_start_frame - offset : emission_end_frame - offset
+                emission_start_frame - offset : emission_end_frame - offset, :
             ]
             emissions_arr.append(emissions_)
             i += EMISSION_INTERVAL
 
-    emissions = torch.cat(emissions_arr, dim=1).squeeze()
+    emissions = torch.cat(emissions_arr, dim=0).squeeze()
     emissions = torch.log_softmax(emissions, dim=-1)
 
     stride = float(waveform.size(1) * 1000 / emissions.size(0) / SAMPLING_FREQ)
@@ -85,9 +85,13 @@ def get_alignments(
         token_indices = []
 
     blank = dictionary["<blank>"]
+    
+    targets = torch.tensor(token_indices, dtype=torch.int32).to(DEVICE)
+    input_lengths = torch.tensor(emissions.shape[0])
+    target_lengths = torch.tensor(targets.shape[0])
 
-    path, _ = F.force_align(
-        emissions, torch.Tensor(token_indices, device=DEVICE).int(), blank=blank
+    path, _ = F.forced_align(
+        emissions, targets, input_lengths, target_lengths, blank=blank
     )
     path = path.to("cpu").tolist()
     segments = merge_repeats(path, {v: k for k, v in dictionary.items()})
